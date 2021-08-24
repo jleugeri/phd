@@ -1,0 +1,155 @@
+\documentclass[tikz, border=0]{standalone}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{fancyvrb}
+\usepackage{amsmath}
+\usepackage{nicefrac}
+
+\usetikzlibrary{calc}
+\usetikzlibrary{fit}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{decorations.pathreplacing}
+\usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{decorations.text}
+\usetikzlibrary{patterns}
+\usetikzlibrary{graphs}
+\usetikzlibrary{graphdrawing}
+\usetikzlibrary{shapes}
+\usetikzlibrary{shapes.geometric}
+% \usetikzlibrary{snakes}
+\usetikzlibrary{backgrounds}
+\usetikzlibrary{matrix}
+
+\pgfplotsset{compat=newest}
+\pgfplotsset{every axis legend/.append style={legend cell align=left, font=\footnotesize, draw=none, fill=none}}
+\pgfplotsset{every axis/.append style={axis background/.style={fill=white}}}
+\pgfplotsset{every tick label/.append style={font=\footnotesize}}
+\pgfplotsset{every axis label/.append style={font=\footnotesize}}
+
+\usepackage{microtype}
+
+\fvset{baselinestretch=0.8}
+\usepgfplotslibrary{fillbetween}
+\usepgfplotslibrary{groupplots}
+\usepgfplotslibrary{patchplots}
+\usepgfplotslibrary{statistics}
+\usepgfplotslibrary{ternary}
+\usepgfplotslibrary{colorbrewer}
+
+
+\usepgfplotslibrary{groupplots}
+
+\tikzstyle{node}=[circle,draw=black,minimum width=0.8cm]
+\tikzstyle{large node}=[node,minimum width=1.1cm]
+\tikzstyle{highlight node}=[circle,draw=black,fill=gray!50,minimum width=0.8cm]
+\tikzstyle{large highlight node}=[circle,draw=black,fill=gray!50,minimum width=1.1cm]
+\tikzstyle{highlight2 node}=[circle,draw=black,fill=gray!20,minimum width=0.8cm]
+\tikzstyle{plate} = [draw,thick,inner sep=0.25cm,rounded corners,gray]
+
+\tikzstyle{decision node}=[rectangle,draw=black,minimum width=0.7cm,minimum height=0.7cm]
+\tikzstyle{utility node}=[shape=diamond,minimum width=1cm, minimum height=1cm,draw=black]
+
+% COLORS
+% set default cycle list and colormap to set
+\pgfplotsset{
+	colormap/Set1-9,
+	colormap name=Set1-9,
+	cycle list/Set1-9
+}
+
+
+\foreach \name[count=\i from 0] in {myRed,myBlue,myGreen,myPurple,myOrange,myYellow,myBrown,myMagenta,myGray}
+{
+	\pgfplotscolormapaccess[0:8]{\i}{Set1-9}
+    \message{GOT \meaning\pgfmathresult^^J}%
+	\def\defcol{\xglobal\definecolor{\name}{rgb}}
+	\expandafter\defcol\expandafter{\pgfmathresult}
+}
+
+\colorlet{subdued}{myGray}
+\definecolor{shadecolor}{rgb}{1,0.8,0.3}
+\definecolor{highlightcolor}{HTML}{AD7FA8}
+\colorlet{quotecolor}{highlightcolor!50}
+\colorlet{chaptertitlecolor}{myBlue}
+
+
+\tikzstyle{solid_line}=[solid, thick, mark=none]
+\tikzset{every picture/.style={semithick, >=stealth'}}
+\tikzset{myline/.style={line width = 0.05cm, rounded corners=5mm}}
+\tikzset{myarrow/.style={line width = 0.05cm, ->, rounded corners=5mm}}
+\tikzset{myaxis/.style={thick, ->, line cap=rect}}
+\tikzset{roundednode/.style={rounded corners=4mm,draw=black,fill=white,line width=0.05cm, minimum size=0.35in, align=center}}
+
+\colorlet{highlightColor_binary}{myBlue}
+\colorlet{highlightColor_digital}{myPurple}
+\colorlet{highlightColor_continuous}{myGreen}
+\colorlet{highlightColor_sigmadelta}{myMagenta}
+\colorlet{highlightColor_spiking}{myOrange}
+\colorlet{highlightColor_filter}{myBlue}
+
+\tikzset{
+    node distance=5mm,>=latex,
+    pulse/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) -- ++(0.25*#1, 0pt) -- ++(0pt, #1) -- ++(0.5*#1, 0pt) -- ++(0pt,-#1) -- ++(0.25*#1,0pt)},
+    },
+    relu/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) -- ++(0.5*#1, 0pt) -- ++(0.5*#1, #1)},
+    },
+    linear/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) -- ++(#1, #1)},
+    },
+    quadratic/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) +(0,#1) parabola[parabola height=-#1] +(#1, #1)},
+    },
+    exponential/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) .. controls +(0.5*#1,0) .. ++(#1,#1)},
+    },
+    step/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) -- ++(0.5*#1, 0pt) -- ++(0pt, #1) -- ++(0.5*#1, 0pt)},
+    },
+    stair/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) -- ++(0.5*#1, 0pt) -- ++(0pt, 0.25*#1) -- ++(0.125*#1, 0pt) -- ++(0pt, 0.25*#1) -- ++(0.125*#1, 0pt) -- ++(0pt, 0.25*#1) -- ++(0.125*#1, 0pt) -- ++(0pt, 0.25*#1) -- ++(0.125*#1, 0pt) },
+    },
+    digital/.style={
+        double,
+        >=angle 90,
+    },
+    binary/.style={
+    },
+    continuous/.style={
+        decorate,decoration={snake, segment length=3pt, amplitude=1pt, pre length=4pt, post length=4pt}
+    },
+    pulsed/.style={
+        densely dashdotted
+    },
+    weight/.style={
+        draw, rectangle, rounded corners
+    },
+    operation/.style={
+        draw, circle
+    },
+    block/.style={
+        draw, rectangle, rounded corners
+    },
+    hidden/.style={
+        opacity=0.25
+    },
+    highlight/.style args={#1}{
+        left color=#1!30!white,
+        right color=#1!30!white,
+        fill=#1!30!white, text=#1, rounded corners
+    }
+}
+    
+\begin{document}
+\input{\inputname}
+\end{document}
