@@ -1,0 +1,264 @@
+
+\colorlet{highlightColor_input}{myPurple}
+\colorlet{highlightColor_hidden}{myBlue}
+\colorlet{highlightColor_output}{myGreen}
+
+\tikzset{
+    outputlayer/.style={
+        fill=highlightColor_output!30!white,
+        text=highlightColor_output,
+        rounded corners,
+    },
+    hiddenlayer/.style={
+        fill=highlightColor_hidden!30!white,
+        text=highlightColor_hidden,
+        rounded corners,
+    },
+    inputlayer/.style={
+        fill=highlightColor_input!30!white,
+        text=highlightColor_input,
+        rounded corners,
+    },
+    neuron/.style={
+        align=center,
+        text width=1em,
+        inner sep=3pt,
+        circle,
+        draw
+    },
+    readout/.style={
+        align=center,
+        text width=0,
+        inner sep=3pt,
+        rectangle,
+        draw
+    },
+    spacer/.style={
+        align=center,
+        text width=1em,
+        text height=1em,
+        circle,
+        draw=none
+    },
+    weight/.style={
+        >=latex,
+    },
+    flowarrow/.style={
+        ->,
+        >=stealth, 
+        line width=5pt, 
+        black!30!white,
+    }
+}
+
+\newcommand{\drawFeedForward}{
+    \begin{tikzpicture}
+        % draw nodes
+        \begin{scope}[local bounding box=neurons]
+            \matrix[row sep=2.5mm, column sep=2.5mm, ampersand replacement=\&]{
+                \node[neuron](n-4-1){}; \& \node[neuron](n-4-2){}; \& \node[spacer](n-4-3){$\cdots$}; \& \node[neuron](n-4-4){}; \\
+                \node[spacer,rotate=90](n-3-1){$\cdots$}; \& \node[spacer,rotate=90](n-3-2){$\cdots$}; \& \node[spacer, rotate=-45](n-3-3){$\cdots$}; \& \node[spacer,rotate=90](n-3-4){$\cdots$}; \\
+                \node[neuron](n-2-1){}; \& \node[neuron](n-2-2){}; \& \node[spacer](n-2-3){$\cdots$}; \& \node[neuron](n-2-4){}; \\
+                \node[neuron](n-1-1){}; \& \node[neuron](n-1-2){}; \& \node[spacer](n-1-3){$\cdots$}; \& \node[neuron](n-1-4){}; \\
+            };
+        \end{scope}
+
+        % draw synapses
+        \foreach \tolayer[count=\fromlayer from 1] in {2,...,4} {
+            \foreach \fromneuron in {1,2,4} {
+                \foreach \toneuron in {1,2,4} {
+                    \draw[weight,->] (n-\fromlayer-\fromneuron) -- (n-\tolayer-\toneuron);
+                }
+            }
+        }
+
+        % draw layers
+        \begin{scope}[on background layer]
+            \fill[inputlayer] ($(n-1-1.south west)+(-5pt,-5pt)$) |- node[left=3mm, anchor=west, pos=0.0, rotate=90]{input} ($(n-1-4.north east)+(+5pt,+5pt)$) |- cycle;
+            \fill[hiddenlayer] ($(n-2-1.south west)+(-5pt,-5pt)$) |- node[left=3mm, anchor=center, pos=0.25, rotate=90]{hidden} ($(n-3-4.south east)+(+5pt,+5pt)$) |- cycle;
+            \fill[outputlayer] ($(n-4-1.south west)+(-5pt,-5pt)$) |- node[left=3mm, anchor=east, pos=0.5, rotate=90]{output} ($(n-4-4.north east)+(+5pt,+5pt)$) |- cycle;
+        \end{scope}
+
+        % draw arrow
+        \draw[flowarrow] (neurons.south) -- (neurons.north);
+
+    \end{tikzpicture}
+}
+
+
+\newcommand{\drawRecurrent}{
+    \begin{tikzpicture}
+        \begin{scope}[local bounding box=neurons]
+            % draw nodes
+            \node[spacer,rotate=90] (n-0) at ($(0:1.5cm)$) {$\cdots$};
+            \foreach \neuron in {1,2,...,9}{
+                \node[neuron] (n-\neuron) at ($(\neuron*360/10:1.5cm)$) {};
+            }
+        \end{scope}
+
+        % draw synapses
+        \foreach \fromneuron in {1,...,8} {
+            \foreach \toneuron in {\number\numexpr\fromneuron + 1\relax,...,9} {
+                \draw[weight,<->] (n-\fromneuron) -- (n-\toneuron);
+            }
+        }
+
+        % draw layers
+        \begin{scope}[on background layer]
+            \fill[outputlayer] let \p1=(n-5.west),\p2=(n-4.south),\p3=(n-0.south), \p4=(n-2.north) in 
+                ($(\x1,\y2)+(-2pt,-2pt)$) |- node[left=3mm, anchor=east, pos=0.5, rotate=90]{output} ($(\x3,\y4)+(+2pt,+2pt)$) |- cycle;
+            \fill[hiddenlayer] let \p1=(n-5.west),\p2=(n-6.south),\p3=(n-0.south),\p4=(n-5.north) in 
+                ($(\x1,\y2)+(-2pt,-2pt)$) |- node[left=3mm, anchor=center, pos=0.25, rotate=90]{hidden} ($(\x3,\y4)+(+2pt,+2pt)$) |- cycle;
+            \fill[inputlayer] let \p1=(n-5.west),\p2=(n-7.south),\p3=(n-0.south),\p4=(n-8.north) in 
+                ($(\x1,\y2)+(-2pt,-2pt)$) |- node[left=3mm, anchor=west, pos=0.0, rotate=90]{input} ($(\x3,\y4)+(+2pt,+2pt)$) |- cycle;
+        \end{scope}
+
+        % draw arrow
+        \draw[flowarrow] (neurons.center) +(110:7mm) arc (110:360+80:7mm);
+
+    \end{tikzpicture}
+}
+
+\newcommand{\drawReservoir}{
+    \begin{tikzpicture}
+        % draw readout nodes
+        \begin{scope}[local bounding box=readout]
+            \matrix[row sep=2.5mm, column sep=2.5mm, ampersand replacement=\&]{
+                \node[readout](r-1){}; \& \node[readout](r-2){}; \& \node[spacer](r-3){$\cdots$}; \& \node[readout](r-4){}; \\
+            };
+        \end{scope}
+        \begin{scope}[local bounding box=neurons]
+            
+
+            % draw reservoir nodes
+            \begin{scope}[local bounding box=reservoir, shift={(readout.south)}, anchor=north]
+
+                \foreach \neuron in {1,...,9}{
+                    \node[neuron] (n-\neuron) at ($(0,-1.5cm)+(\neuron*360/10:1.5cm)$) {};
+                }
+                \node[spacer,rotate=90,anchor=east] (n-0) at ($(0,-1.5cm)+(0:1.5cm)$) {$\cdots$};
+            \end{scope}
+        \end{scope}
+
+        % draw synapses
+        \foreach \fromneuron in {1,...,8} {
+            \foreach \toneuron in {\number\numexpr\fromneuron + 1\relax,...,9} {
+                \draw[weight,<->] (n-\fromneuron) -- (n-\toneuron);
+            }
+        }
+
+        % draw readout synapses
+        \foreach \fromneuron in {1,...,4} {
+            \foreach \toneuron in {1,2,4} {
+                \draw[weight,->] let \p1=(n-\fromneuron),\p2=(r-\toneuron) in
+                    (n-\fromneuron) .. controls (\x1, -0.5cm) and (0.5*\x1+0.5*\x2,-0.5) .. (r-\toneuron);
+            }
+        }
+
+        % draw layers
+        \begin{scope}[on background layer]
+            \fill[outputlayer] let \p1=(n-5.west),\p2=(r-1.south),\p3=(n-0.south), \p4=(r-4.north) in 
+                ($(\x1,\y2)+(-2pt,-2pt)$) |- node[left=3mm, anchor=east, pos=0.5, rotate=90]{readout} ($(\x3,\y4)+(+2pt,+2pt)$) |- cycle;
+            \fill[hiddenlayer] let \p1=(n-5.west),\p2=(n-6.south),\p3=(n-0.south),\p4=(n-2.north) in 
+                ($(\x1,\y2)+(-2pt,-2pt)$) |- node[left=3mm, anchor=center, pos=0.25, rotate=90]{hidden} ($(\x3,\y4)+(+2pt,+2pt)$) |- cycle;
+            \fill[inputlayer] let \p1=(n-5.west),\p2=(n-7.south),\p3=(n-0.south),\p4=(n-8.north) in 
+                ($(\x1,\y2)+(-2pt,-2pt)$) |- node[left=3mm, anchor=west, pos=0.0, rotate=90]{input} ($(\x3,\y4)+(+2pt,+2pt)$) |- cycle;
+        \end{scope}
+
+
+        % draw arrow
+        \draw[flowarrow] (neurons.center) +(110:7mm) arc (110:420:7mm) .. controls ($(neurons.center)+(90:7mm)$) .. (readout.north);
+
+    \end{tikzpicture}
+}
+
+\newcommand{\drawNEF}{
+    \begin{tikzpicture}
+        % draw nodes
+        \node[minimum size=1cm, outputlayer] (module1) at (0,0) {};
+        \node[minimum size=1cm, hiddenlayer] (module2) at (1.5,1.5) {};
+        \node[minimum size=1cm, outputlayer] (module3) at (-1.5,3) {};
+
+        % draw connections
+        \draw[->,weight] (module1) -- (module2);
+        \draw[->,weight] (module1) -- (module3);
+        \draw[->,weight] (module2) -- (module3);
+        \draw[->,weight, rounded corners] (module3.north) |- ++(-7mm,2mm) |- ($(module1.south)+(0,-2mm)$) -- (module1.south);
+
+        % draw arrows
+        \draw[flowarrow,line width=3pt] (module1.south) -- (module1.north);
+        \draw[flowarrow,line width=3pt] (module3.south) -- (module3.north);
+        \draw[flowarrow,line width=3pt] (module2.center) ++(0,-1mm) ++(110:2mm) arc (110:420:2mm) .. controls ($(module2.center)+(90:2mm)$) .. (module2.north);
+
+    \end{tikzpicture}
+}
+
+
+
+\newcommand{\drawBottleneckNet}{
+    \begin{tikzpicture}
+        % draw nodes
+        \begin{scope}[local bounding box=neurons]
+            \matrix[row sep=2.5mm, column sep=2.5mm, ampersand replacement=\&]{
+                \node[spacer,rotate=90](n-5-1){$\cdots$}; \& \node[spacer,rotate=90](n-5-2){$\cdots$}; \& \node[spacer, rotate=-45](n-5-3){$\cdots$}; \& \node[spacer,rotate=90](n-5-4){$\cdots$}; \\
+                \node[neuron](n-4-1){}; \& \node[neuron](n-4-2){}; \& \node[spacer](n-4-3){$\cdots$}; \& \node[neuron](n-4-4){}; \\
+                \& \node[neuron](n-3-1){}; \& \node[neuron](n-3-2){}; \& \\
+                \node[neuron](n-2-1){}; \& \node[neuron](n-2-2){}; \& \node[spacer](n-2-3){$\cdots$}; \& \node[neuron](n-2-4){}; \\
+                \node[spacer,rotate=90](n-1-1){$\cdots$}; \& \node[spacer,rotate=90](n-1-2){$\cdots$}; \& \node[spacer, rotate=-45](n-1-3){$\cdots$}; \& \node[spacer,rotate=90](n-1-4){$\cdots$}; \\
+            };
+        \end{scope}
+    
+        % draw synapses
+        \foreach \tolayer[count=\fromlayer from 1] in {2,...,5} {
+            \foreach \fromneuron in {1,2,4} {
+                \foreach \toneuron in {1,2,4} {
+                    \ifthenelse{\(\fromlayer=3 \AND \fromneuron=4\) \OR \(\tolayer=3 \AND \toneuron=4\)}{}{\draw[->, weight] (n-\fromlayer-\fromneuron) -- (n-\tolayer-\toneuron);};
+                }
+            }
+        }
+    
+        % draw layers
+        \begin{scope}[on background layer]
+            \fill[inputlayer] ($(n-1-1.north west)+(-5pt,-5pt)$) |- node[left=3mm, anchor=west, pos=0.0, rotate=90]{encoder} ($(n-2-4.north east)+(+5pt,+5pt)$) |- cycle;
+            \fill[hiddenlayer] let \p1=($(n-1-1.north west)+(-5pt,-5pt)$), \p2=($(n-3-1.south west)+(-5pt,-5pt)$), \p3=($(n-2-4.north east)+(+5pt,+5pt)$), \p4=($(n-3-2.north east)+(+5pt,+5pt)$) in {
+                (\x1,\y2) |- node[left=3mm, anchor=center, pos=0.25, rotate=90]{bottleneck} (\x3,\y4) |- cycle
+            };
+            \fill[outputlayer] ($(n-4-1.south west)+(-5pt,-5pt)$) |- node[left=3mm, anchor=east, pos=0.5, rotate=90]{decoder} ($(n-5-4.south east)+(+5pt,+5pt)$) |- cycle;
+        \end{scope}
+    
+    \end{tikzpicture}
+}
+
+
+\newcommand{\drawBottleneckSingle}{
+    \begin{tikzpicture}
+        % draw nodes
+        \begin{scope}[local bounding box=neurons]
+            \matrix[row sep=2.5mm, column sep=2.5mm, ampersand replacement=\&]{
+                \node[spacer,rotate=90](n-3-1){$\cdots$}; \& \node[spacer,rotate=90](n-3-2){$\cdots$}; \& \node[spacer, rotate=-45](n-3-3){$\cdots$}; \& \node[spacer,rotate=90](n-3-4){$\cdots$}; \\
+                \& \node[neuron, draw=none] (tmp1) {}; \& \coordinate (tmp2); \& \\
+                \node[spacer,rotate=90](n-1-1){$\cdots$}; \& \node[spacer,rotate=90](n-1-2){$\cdots$}; \& \node[spacer, rotate=-45](n-1-3){$\cdots$}; \& \node[spacer,rotate=90](n-1-4){$\cdots$}; \\
+            };
+            \node[neuron] (n-2-1) at ($(tmp1)!0.5!(tmp2)$) {};
+        \end{scope}
+    
+        % draw synapses
+        \foreach \fromneuron in {1,2,4} {
+            \draw[->, weight] (n-1-\fromneuron) -- (n-2-1);
+        }
+    
+        \foreach \toneuron in {1,2,4} {
+            \draw[->, weight] (n-2-1) -- (n-3-\toneuron);
+        }
+    
+        % draw layers
+        \begin{scope}[on background layer]
+            \fill[inputlayer] ($(n-1-1.north west)+(-5pt,-5pt)$) |- node[left=3mm, anchor=west, pos=0.0, rotate=90]{} ($(n-1-4.south east)+(+5pt,+5pt)$) |- cycle;
+            \fill[hiddenlayer] let \p1=($(n-1-1.north west)+(-5pt,-5pt)$), \p2=($(n-2-1.south west)+(-5pt,-5pt)$), \p3=($(n-1-4.south east)+(+5pt,+5pt)$), \p4=($(n-2-1.north east)+(+5pt,+5pt)$) in {
+                (\x1,\y2) |- node[left=3mm, anchor=center, pos=0.25, rotate=90]{bottleneck} (\x3,\y4) |- cycle
+            };
+            \fill[outputlayer] ($(n-3-1.north west)+(-5pt,-5pt)$) |- node[left=3mm, anchor=east, pos=0.5, rotate=90]{} ($(n-3-4.south east)+(+5pt,+5pt)$) |- cycle;
+        \end{scope}
+    
+    \end{tikzpicture}
+}

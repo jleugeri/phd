@@ -1,0 +1,52 @@
+
+\begin{center}
+\begin{tikzpicture}
+\matrix[row sep=1.5cm,column sep=1.5cm,signal/.style={
+   circle, inner sep=3pt
+}, highlight/.style={
+fill=#1, fill opacity=0.25, rectangle, rounded corners
+},
+]{
+    \node[signal] (s1) {$s_1(t)$}; & \node[signal] (i1) {$i_1(t)$}; & \node[signal] (x1) {$x_1(t)$}; &
+    \node[signal] (u1) {$u_1(t)$}; & \node[signal] (y1) {$y_1(t)$}; \\
+    \node[signal] (s2) {$s_2(t)$}; & \node[signal] (i2) {$i_2(t)$}; & \node[signal] (x2) {$x_2(t)$}; &
+    \node[signal] (u2) {$u_2(t)$}; & \node[signal] (y2) {$y_2(t)$}; \\
+};
+
+% draw mixing weights
+\draw[->] (s1) -- node[sloped,above](m11){$\times m_{1,1}$} (i1);
+\draw[->] (s1) -- node[pos=0.7, sloped,below](m21){$\times m_{2,1}$} (i2);
+\draw[->] (s2) -- node[pos=0.7, sloped,above](m12){$\times m_{1,2}$} (i1);
+\draw[->] (s2) -- node[sloped,below](m22){$\times m_{2,2}$} (i2);
+
+% draw demixing weights
+\draw[->] (i1) -- node[sloped,above](w11){$\times w_{1,1}$} (x1);
+\draw[->] (i1) -- node[pos=0.7, sloped,below](w21){$\times w_{2,1}$} (x2);
+\draw[->] (i2) -- node[pos=0.7, sloped,above](w12){$\times w_{1,2}$} (x1);
+\draw[->] (i2) -- node[sloped,below](w22){$\times w_{2,2}$} (x2);
+
+% draw x->u
+\draw[->] (x1) -- node[above](x1-u1){$F_{X_1}$} (u1);
+\draw[->] (x2) -- node[below](x2-u2){$F_{X_2}$} (u2);
+
+% draw u->y
+\draw[->] (u1) -- node[above](u1-y1){$F^{-1}_{Y_1}$} (y1);
+\draw[->] (u2) -- node[below](u2-y2){$F^{-1}_{Y_2}$} (y2);
+
+% draw skip-arrow
+\draw[->,myRed,dashed, rounded corners] (s1) -- ++(0,1cm) -| node[above,pos=0.25]{$y_i(t) = (F^{-1}_{Y_i}\circ F_{X_i})({w_i}^T M s(t)) \approx \exp\left(s_i(t)\right)$} (y1);
+
+
+% draw boxes
+\begin{scope}[on background layer]
+\node[fit=(m11) (m21) (m12) (m22), highlight=myGray, label={[myGray,align=center]below:unknown\\mixing}] (mixing) {};
+\node[fit=(w11) (w21) (w12) (w22), highlight=myBlue, label={[myBlue,align=center]below:synaptic\\plasticity}] (demixing) {};
+\node[fit=(x1-u1) (x2-u2), highlight=myGreen, label={[myGreen,align=center]below:intrinsic\\plasticity}] (ip) {};
+
+% draw neurons
+\node[fill=myGray, fill opacity=0.1, rectangle, rounded corners, inner sep=-1pt, gray, fit=(u1) (x1-u1) (u1-y1), label={[anchor=north east, myGray]south east:$f_1=F^{-1}_{Y_1}\circ F_{X_1}$}] (neuron1) {};
+\node[fill=myGray, fill opacity=0.1, rectangle, rounded corners, inner sep=-1pt, myGray, fit=(u2) (x2-u2) (u2-y2), label={[anchor=south east, myGray]north east:$f_2=F^{-1}_{Y_2}\circ F_{X_2}$}] (neuron2) {};
+\end{scope}
+
+\end{tikzpicture}
+\end{center}

@@ -1,0 +1,732 @@
+
+\colorlet{highlightColor_binary}{myBlue}
+\colorlet{highlightColor_digital}{myPurple}
+\colorlet{highlightColor_continuous}{myGreen}
+\colorlet{highlightColor_sigmadelta}{myMagenta}
+\colorlet{highlightColor_spiking}{myOrange}
+\colorlet{highlightColor_filter}{myBlue}
+
+\tikzset{
+    node distance=5mm,>=latex,
+    pulse/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) -- ++(0.25*#1, 0pt) -- ++(0pt, #1) -- ++(0.5*#1, 0pt) -- ++(0pt,-#1) -- ++(0.25*#1,0pt)},
+    },
+    relu/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) -- ++(0.5*#1, 0pt) -- ++(0.5*#1, #1)},
+    },
+    linear/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) -- ++(#1, #1)},
+    },
+    quadratic/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) +(0,#1) parabola[parabola height=-#1] +(#1, #1)},
+    },
+    exponential/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) .. controls +(0.5*#1,0) .. ++(#1,#1)},
+    },
+    step/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) -- ++(0.5*#1, 0pt) -- ++(0pt, #1) -- ++(0.5*#1, 0pt)},
+    },
+    stair/.style={
+        minimum size=(1.5*#1),
+        append after command={ (\tikzlastnode.center) ++(-0.5*#1,-0.5*#1) -- ++(0.5*#1, 0pt) -- ++(0pt, 0.25*#1) -- ++(0.125*#1, 0pt) -- ++(0pt, 0.25*#1) -- ++(0.125*#1, 0pt) -- ++(0pt, 0.25*#1) -- ++(0.125*#1, 0pt) -- ++(0pt, 0.25*#1) -- ++(0.125*#1, 0pt) },
+    },
+    digital/.style={
+        double,
+        >=angle 90,
+    },
+    binary/.style={
+    },
+    continuous/.style={
+        decorate,decoration={snake, segment length=3pt, amplitude=1pt, pre length=4pt, post length=4pt}
+    },
+    pulsed/.style={
+        densely dashdotted
+    },
+    weight/.style={
+        draw, rectangle, rounded corners
+    },
+    operation/.style={
+        draw, circle
+    },
+    block/.style={
+        draw, rectangle, rounded corners
+    },
+    hidden/.style={
+        opacity=0.25
+    },
+    highlight/.style args={#1}{
+        left color=#1!30!white,
+        right color=#1!30!white,
+        fill=#1!30!white, text=#1, rounded corners
+    }
+}
+    
+% draw digital neuron
+\makeatletter
+\newcommand{\drawDigitalNeuronInner}[3][]{
+    %draw first neuron
+    \node[operation, label=below:{$x[t]$}]  (sum) at (0,0) {+};
+    \draw node[block, stair=12pt] (nonlinearity) at ($(sum)+(1,0)$) {};
+    \coordinate (transmitter) at ($(nonlinearity)+(4em,0)$) ;
+    \node[weight, label={below:{$w_{1}$}}] (weight1) at ($(sum)+(-1,1.1)$) {$\times$};
+    \node[weight, label={below:{$w_{2}$}}]  (weight2) at ($(sum)+(-1,0)$) {$\times$};
+    \node[] (dots) at ($(sum)+(-1,-1.1)$) {\vdots};
+
+    % draw signals
+    \ifnum\numexpr#3\relax>0{
+        \draw[<-,decorate,digital] (weight1) -- node[below=0.2]  (input1) {$s_1[t]$} ++(-4em,0);
+        \draw[<-,decorate,digital] (weight2) -- node[below=0.2]  (input2) {$s_2[t]$} ++(-4em,0);
+    }\fi;
+
+    \draw [->] (weight1) -| (sum);
+    \draw [->] (weight2) -- (sum);
+    \draw [] (sum) -- (nonlinearity);
+    
+    % draw background
+    \begin{scope}[on background layer]
+        \path [highlight=highlightColor_digital] let \p1=(weight1.north west), \p2=(dots.south west), \p3=(nonlinearity.east) in 
+        ($(\x1,\y1) + (-0.1,0.1)$) -- node[above]{#2} ($(\x3,\y1) + (0.1,0.1)$) -- ($(\x3,\y2)+(0.1,-0.1)$) -- ($(\x1,\y2)+(-0.1,-0.1)$) -- cycle;
+    \end{scope}
+    
+    
+    \ifnum\numexpr#3\relax=1{
+        \draw[->,decorate,digital] (nonlinearity) -- node[below=0.2]  (input2) {$y[t]$} (transmitter);
+    } \else \ifnum\numexpr#3\relax>1 {
+        %draw second neuron
+        \path (transmitter) ++(1.5,+1) node[weight, hidden, label={below:{$w_{3}$}}] (weight3) {$\times$}
+        ++(0,-1) node[weight, label={below:{$w_{4}$}}]  (weight4) {$\times$}
+        ++(0,-1) node[]  (dots2) {\vdots};
+        \node[operation, hidden, right=of weight4, label={below:$z[t]$}]  (sum2) {+};
+        \node[right=of sum2] {...};
+
+        % draw background
+        \begin{scope}[on background layer]
+                \path [highlight=highlightColor_digital, right color=white] let \p1=(weight3.north west), \p2=(dots2.south west), \p3=(weight3.west), \p4=(sum2.east) in 
+            ($(\x3,\y1) + (-0.1,0.1)$) -- node[above]{#1} ($(\x4,\y1) + (0.2,0.1)$) -- ($(\x4,\y2)+(0.2,-0.1)$) -- ($(\x3,\y2)+(-0.1,-0.1)$) -- cycle;
+        \end{scope}
+
+        \draw[->,decorate,digital] (nonlinearity) -- node[below=0.2]  (input2) {$y[t]$} (weight4);
+        \draw [->, hidden] (weight3) -| (sum2);
+        \draw (weight4) -- (sum2);
+    } \fi \fi;
+}
+\makeatother
+\newcommand{\drawDigitalNeuron}[3][1]{
+    \begin{tikzpicture}
+        \drawDigitalNeuronInner[#1]{#2}{#3};
+    \end{tikzpicture}
+}
+    
+% draw binary neuron
+\makeatletter
+\newcommand{\drawBinaryNeuronInner}[3][\@nil]{
+    \def\optarg{#1}
+    
+    %draw first neuron
+    \node[operation, label=below:{$x[t]$}]  (sum) at (0,0) {+};
+    \draw node[block, step=12pt] (nonlinearity) at ($(sum)+(1,0)$) {};
+    \coordinate (transmitter) at ($(nonlinearity)+(4em,0)$) ;
+    \node[weight, label={below:{$w_{1}$}}] (weight1) at ($(sum)+(-1,1.1)$) {$\times$};
+    \node[weight, label={below:{$w_{2}$}}]  (weight2) at ($(sum)+(-1,0)$) {$\times$};
+    \node[] (dots) at ($(sum)+(-1,-1.1)$) {\vdots};
+
+    % draw signals
+    \ifnum\numexpr#3\relax>0{
+        \draw[<-,decorate,binary] (weight1) -- node[below=0.2]  (input1) {$s_1[t]$} ++(-4em,0);
+        \draw[<-,decorate,binary] (weight2) -- node[below=0.2]  (input2) {$s_2[t]$} ++(-4em,0);
+    }\fi;
+
+    \draw [->] (weight1) -| (sum);
+    \draw [->] (weight2) -- (sum);
+    \draw [] (sum) -- (nonlinearity);
+    
+    % draw background
+    \begin{scope}[on background layer]
+        \path [highlight=highlightColor_binary] let \p1=(weight1.north west), \p2=(dots.south west), \p3=(nonlinearity.east) in 
+        ($(\x1,\y1) + (-0.1,0.1)$) -- node[above]{#2} ($(\x3,\y1) + (0.1,0.1)$) -- ($(\x3,\y2)+(0.1,-0.1)$) -- ($(\x1,\y2)+(-0.1,-0.1)$) -- cycle;
+    \end{scope}
+    
+    
+    \ifnum\numexpr#3\relax=1{
+        \draw[->,decorate,binary] (nonlinearity) -- node[below=0.2]  (input2) {$y[t]$} (transmitter);
+    } \else \ifnum\numexpr#3\relax>1 {
+        %draw second neuron
+        \path (transmitter) ++(1.5,+1) node[weight, hidden, label={below:{$w_{3}$}}] (weight3) {$\times$}
+        ++(0,-1) node[weight, label={below:{$w_{4}$}}]  (weight4) {$\times$}
+        ++(0,-1) node[]  (dots2) {\vdots};
+        \node[operation, hidden, right=of weight4, label={below:$z[t]$}]  (sum2) {+};
+        \node[right=of sum2] {...};
+
+        % draw background
+        \begin{scope}[on background layer]
+                \path [highlight=highlightColor_binary, right color=white] let \p1=(weight3.north west), \p2=(dots2.south west), \p3=(weight3.west), \p4=(sum2.east) in 
+            ($(\x3,\y1) + (-0.1,0.1)$) -- node[above]{#1} ($(\x4,\y1) + (0.2,0.1)$) -- ($(\x4,\y2)+(0.2,-0.1)$) -- ($(\x3,\y2)+(-0.1,-0.1)$) -- cycle;
+        \end{scope}
+
+        \draw[->,decorate,binary] (nonlinearity) -- node[below=0.2]  (input2) {$y[t]$} (weight4);
+        \draw [->, hidden] (weight3) -| (sum2);
+        \draw (weight4) -- (sum2);
+    } \fi \fi;
+
+}
+\makeatother
+\newcommand{\drawBinaryNeuron}[3][1]{
+    \begin{tikzpicture}
+        \drawBinaryNeuronInner[#1]{#2}{#3};
+    \end{tikzpicture}
+}
+
+% draw linear nonlinear neuron
+\makeatletter
+\newcommand{\drawContinuousNeuronInner}[3][\@nil]{
+    \def\optarg{#1}
+    \def\drawarrow{#3}
+    %draw first neuron
+    \node[operation, label=below:{$x(t)$}]  (sum) at (0,0) {+};
+    \draw node[block, relu=12pt] (nonlinearity) at ($(sum)+(1,0)$) {};
+    \coordinate (transmitter) at ($(nonlinearity)+(4em,0)$) ;
+    \node[weight, label={below:{$w_{1}$}}] (weight1) at ($(sum)+(-1,1.1)$) {$\times$};
+    \node[weight, label={below:{$w_{2}$}}]  (weight2) at ($(sum)+(-1,0)$) {$\times$};
+    \node[] (dots) at ($(sum)+(-1,-1.1)$) {\vdots};
+
+    % draw signals
+    \ifnum\numexpr#3\relax=1{
+        \draw[<-,decorate,continuous] (weight1) -- node[below=0.2]  (input1) {$s_1(t)$} ++(-4em,0);
+        \draw[<-,decorate,continuous] (weight2) -- node[below=0.2]  (input2) {$s_2(t)$} ++(-4em,0);
+    } \fi;
+    
+    \draw [->] (weight1) -| (sum);
+    \draw [->] (weight2) -- (sum);
+    \draw [] (sum) -- (nonlinearity);
+    
+    % draw background
+    \begin{scope}[on background layer]
+        \path [highlight=highlightColor_continuous] let \p1=(weight1.north west), \p2=(dots.south west), \p3=(nonlinearity.east) in 
+        ($(\x1,\y1) + (-0.1,0.1)$) -- node[above]{#2} ($(\x3,\y1) + (0.1,0.1)$) -- ($(\x3,\y2)+(0.1,-0.1)$) -- ($(\x1,\y2)+(-0.1,-0.1)$) -- cycle;
+    \end{scope}
+    
+    
+    \ifnum\numexpr#3\relax=1{
+        \draw[->,decorate,continuous] (nonlinearity) -- node[below=0.2]  (input2) {$y(t)$} (transmitter);
+    } \else \ifnum\numexpr#3\relax>1 {            %draw second neuron
+        \path (transmitter) ++(1.5,+1) node[weight, hidden, label={below:{$w_{3}$}}] (weight3) {$\times$}
+        ++(0,-1) node[weight, label={below:{$w_{4}$}}]  (weight4) {$\times$}
+        ++(0,-1) node[]  (dots2) {\vdots};
+        \node[operation, hidden, right=of weight4, label={below:$z(t)$}]  (sum2) {+};
+        \node[right=of sum2] {...};
+
+        % draw background
+        \begin{scope}[on background layer]
+                \path [highlight=highlightColor_continuous, right color=white] let \p1=(weight3.north west), \p2=(dots2.south west), \p3=(weight3.west), \p4=(sum2.east) in 
+            ($(\x3,\y1) + (-0.1,0.1)$) -- node[above]{#1} ($(\x4,\y1) + (0.2,0.1)$) -- ($(\x4,\y2)+(0.2,-0.1)$) -- ($(\x3,\y2)+(-0.1,-0.1)$) -- cycle;
+        \end{scope}
+
+        \draw[->,decorate,continuous] (nonlinearity) -- node[below=0.2]  (input2) {$y(t)$} (weight4);
+        \draw [->, hidden] (weight3) -| (sum2);
+        \draw (weight4) -- (sum2);
+    } \fi \fi;
+}
+\makeatother
+\newcommand{\drawContinuousNeuron}[3][1]{
+    \begin{tikzpicture}
+        \drawContinuousNeuronInner[#1]{#2}{#3};
+    \end{tikzpicture}
+}
+
+% draw Sigma-Delta modulator
+\makeatletter
+\newcommand{\drawSigmaDeltaModulatorInner}[3][\@nil]{
+    \def\optarg{#1}
+    \def\drawarrow{#3}
+    %draw first neuron
+    \node[operation]  (sum) at (0,0) {+};
+    \node[operation, label={above:$x[t]$}] (sub) at ($(sum)+(1,0)$) {+};
+    \node[block]  (filter) at ($(sub)+(1,0)$) {$\frac{1}{z}$};
+    \draw node[block, pulse=12pt] (nonlinearity) at ($(filter)+(1,0)$) {};
+    \coordinate (transmitter) at ($(nonlinearity)+(0.1 + 4em,0)$) ;
+    \node[weight, label={below:{$w_{1}$}}] (weight1) at ($(sum)+(-1,1.1)$) {$\times$};
+    \node[weight, label={below:{$w_{2}$}}]  (weight2) at ($(sum)+(-1,0)$) {$\times$};
+    \node[] (dots) at ($(sum)+(-1,-1.1)$) {\vdots};
+
+    % draw signals
+    \ifnum\numexpr#3\relax=1{
+        \draw[<-,decorate,pulsed] (weight1) -- node[below=0.2]  (input1) {$s_1(t)$} ++(-4em,0);
+        \draw[<-,decorate,pulsed] (weight2) -- node[below=0.2]  (input2) {$s_2(t)$} ++(-4em,0);
+    } \fi;
+
+    \draw [->] (weight1) -| (sum);
+    \draw [->] (weight2) -- (sum);
+    \draw [] (sum) -- (sub) -- (filter) -- (nonlinearity);
+    \draw [->] (nonlinearity.east) -- ++(0.1,0) -- ++(0,-1) -| node[pos=0.1,above] {reset} node[near end,left]{$-\theta$} (sub);
+
+    
+    % draw background
+    \begin{scope}[on background layer]
+        \path [highlight=highlightColor_sigmadelta] let \p1=(weight1.north west), \p2=(dots.south west), \p3=(nonlinearity.east) in 
+        ($(\x1,\y1) + (-0.1,0.1)$) -- node[above]{#2} ($(\x3,\y1) + (0.2,0.1)$) -- ($(\x3,\y2)+(0.2,-0.1)$) -- ($(\x1,\y2)+(-0.1,-0.1)$) -- cycle;
+    \end{scope}
+    
+    
+    \ifnum\numexpr#3\relax=1{
+        \draw[->,decorate,pulsed] (nonlinearity) -- node[below=0.2]  (input2) {$y[t]$} (transmitter);
+    } \else \ifnum\numexpr#3\relax>1 {            %draw second neuron
+        \path (transmitter) ++(1.5,+1) node[weight, hidden, label={below:{$w_{3}$}}] (weight3) {$\times$}
+        ++(0,-1) node[weight, label={below:{$w_{4}$}}]  (weight4) {$\times$}
+        ++(0,-1) node[]  (dots2) {\vdots};
+        \node[operation, hidden, right=of weight4, label={below:$z[t]$}]  (sum2) {+};
+        \node[right=of sum2] {...};
+
+        % draw background
+        \begin{scope}[on background layer]
+                \path [highlight=highlightColor_sigmadelta, right color=white] let \p1=(weight3.north west), \p2=(dots2.south west), \p3=(weight3.west), \p4=(sum2.east) in 
+            ($(\x3,\y1) + (-0.1,0.1)$) -- node[above]{#1} ($(\x4,\y1) + (0.2,0.1)$) -- ($(\x4,\y2)+(0.2,-0.1)$) -- ($(\x3,\y2)+(-0.1,-0.1)$) -- cycle;
+        \end{scope}
+
+        \draw[->,decorate,pulsed] (nonlinearity) -- node[below=0.2]  (input2) {$y[t]$} (weight4);
+        \draw [->, hidden] (weight3) -| (sum2);
+        \draw (weight4) -- (sum2);
+    } \fi \fi;
+}
+\makeatother
+\newcommand{\drawSigmaDeltaModulator}[3][1]{
+    \begin{tikzpicture}
+        \drawSigmaDeltaModulatorInner[#1]{#2}{#3};
+    \end{tikzpicture}
+}
+
+% draw spiking neuron
+\makeatletter
+\newcommand{\drawSpikingNeuronInner}[3][\@nil]{
+    \def\optarg{#1}
+    \def\drawarrow{#3}
+    %draw first neuron
+    \node[operation]  (sum) at (0,0) {+};
+    \node[operation, label={above:$x(t)$}] (sub) at ($(sum)+(1,0)$) {+};
+    \node[block]  (filter) at ($(sub)+(1,0)$) {$\frac{\alpha}{s+\alpha}$};
+    \draw node[block, pulse=12pt] (nonlinearity) at ($(filter)+(1,0)$) {};
+    \coordinate (transmitter) at ($(nonlinearity)+(0.1 + 4em,0)$) ;
+    \node[weight, label={below:{$w_{1}$}}] (weight1) at ($(sum)+(-1,1.1)$) {$\times$};
+    \node[weight, label={below:{$w_{2}$}}]  (weight2) at ($(sum)+(-1,0)$) {$\times$};
+    \node[] (dots) at ($(sum)+(-1,-1.1)$) {\vdots};
+
+    % draw signals
+    \ifnum\numexpr#3\relax>0{
+        \draw[<-,decorate,pulsed] (weight1) -- node[below=0.2]  (input1) {$s_1(t)$} ++(-4em,0);
+        \draw[<-,decorate,pulsed] (weight2) -- node[below=0.2]  (input2) {$s_2(t)$} ++(-4em,0);
+    } \fi;
+    \draw [->] (weight1) -| (sum);
+    \draw [->] (weight2) -- (sum);
+    \draw [] (sum) -- (sub) -- (filter) -- (nonlinearity);
+    \draw [->] (nonlinearity.east) -- ++(0.1,0) -- ++(0,-1) -| node[pos=0.1,above] {reset} node[near end,left]{$-\theta$} (sub);
+
+    
+    % draw background
+    \begin{scope}[on background layer]
+        \path [highlight=highlightColor_spiking] let \p1=(weight1.north west), \p2=(dots.south west), \p3=(nonlinearity.east) in 
+        ($(\x1,\y1) + (-0.1,0.1)$) -- node[above]{#2} ($(\x3,\y1) + (0.2,0.1)$) -- ($(\x3,\y2)+(0.2,-0.1)$) -- ($(\x1,\y2)+(-0.1,-0.1)$) -- cycle;
+    \end{scope}
+    
+    
+    \ifnum\numexpr#3\relax=1{
+        \draw[->,decorate,pulsed] (nonlinearity) -- node[below=0.2]  (input2) {$y(t)$} (transmitter);
+    } \else \ifnum\numexpr#3\relax>1 {            %draw second neuron
+        \path (transmitter) ++(1.5,+1) node[weight, hidden, label={below:{$w_{3}$}}] (weight3) {$\times$}
+        ++(0,-1) node[weight, label={below:{$w_{4}$}}]  (weight4) {$\times$}
+        ++(0,-1) node[]  (dots2) {\vdots};
+        \node[operation, hidden, right=of weight4, label={below:$z(t)$}]  (sum2) {+};
+        \node[right=of sum2] {...};
+
+        % draw background
+        \begin{scope}[on background layer]
+                \path [highlight=highlightColor_spiking, right color=white] let \p1=(weight3.north west), \p2=(dots2.south west), \p3=(weight3.west), \p4=(sum2.east) in 
+            ($(\x3,\y1) + (-0.1,0.1)$) -- node[above]{#1} ($(\x4,\y1) + (0.2,0.1)$) -- ($(\x4,\y2)+(0.2,-0.1)$) -- ($(\x3,\y2)+(-0.1,-0.1)$) -- cycle;
+        \end{scope}
+
+        \draw[->,decorate,pulsed] (nonlinearity) -- node[below=0.2]  (input2) {$y(t)$} (weight4);
+        \draw [->, hidden] (weight3) -| (sum2);
+        \draw (weight4) -- (sum2);
+        } \fi \fi;
+}
+\makeatother
+\newcommand{\drawSpikingNeuron}[3][1]{
+    \begin{tikzpicture}
+        \drawSpikingNeuronInner[#1]{#2}{#3};
+    \end{tikzpicture}
+}
+
+
+% draw spiking single signal
+\makeatletter
+\newcommand{\drawSpikingNeuronSingleInputInner}[3][\@nil]{
+    \def\optarg{#1}
+    \def\drawarrow{#3}
+    %draw first neuron
+    \node[operation]  (sum) at (0,0) {+};
+    \node[block]  (filter) at ($(sum)+(1,0)$) {$\frac{\alpha}{s+\alpha}$};
+    \draw node[block, pulse=12pt] (nonlinearity) at ($(filter)+(1,0)$) {};
+    \coordinate (transmitter) at ($(nonlinearity)+(0.1 + 4em,0)$) ;
+
+    % draw signals
+    \ifnum\numexpr#3\relax>0{
+        \draw[<-,decorate,pulsed] (sum) -- node[below=0.2]  (input2) {$s(t)$} ++(-4em,0);
+    } \fi;
+    \draw [] (sum) -- (filter) -- (nonlinearity);
+    \draw [->] (nonlinearity.east) -- ++(0.1,0) -- ++(0,-1) -| node[pos=0.1,above] {reset} node[near end,left]{$-\theta$} (sum);
+
+    
+    % draw background
+    \begin{scope}[on background layer]
+        \path [highlight=highlightColor_spiking] let \p1=($(sum.north west)+(-0.2,0.2)$), \p2=($(filter.south west)+(0,-0.75)$), \p3=(nonlinearity.east) in 
+        ($(\x1,\y1) + (-0.1,0.1)$) -- node[above]{#2} ($(\x3,\y1) + (0.2,0.1)$) -- ($(\x3,\y2)+(0.2,-0.1)$) -- ($(\x1,\y2)+(-0.1,-0.1)$) -- cycle;
+    \end{scope}
+    
+    
+    \ifnum\numexpr#3\relax=1{
+        \draw[->,decorate,pulsed] (nonlinearity) -- node[below=0.2]  (input2) {$y(t)$} (transmitter);
+    } \else \ifnum\numexpr#3\relax>1 {            %draw second neuron
+        \path (transmitter) ++(1.5,0) node[weight, label={below:{$\theta$}}]  (weight4) {$\times$};
+        \node[block, label={below:$z(t)$}]  (filter2) at ($(weight4)+(1,0)$) {$\frac{\alpha}{s+\alpha}$};
+
+        % draw background
+        \begin{scope}[on background layer]
+                \path [highlight=highlightColor_spiking, right color=white] let \p1=($(sum.north west)+(-0.2,0.2)$), \p2=($(filter2.south west)+(0,-0.75)$), \p3=(weight4.west), \p4=(filter2.east) in 
+            ($(\x3,\y1) + (-0.1,0.1)$) -- node[above]{#1} ($(\x4,\y1) + (0.2,0.1)$) -- ($(\x4,\y2)+(0.2,-0.1)$) -- ($(\x3,\y2)+(-0.1,-0.1)$) -- cycle;
+        \end{scope}
+
+        \draw[->,decorate,pulsed] (nonlinearity) -- node[below=0.2]  (input2) {$y(t)$} (weight4);
+        \draw (weight4) -- (filter2);
+        } \fi \fi;
+}
+\makeatother
+\newcommand{\drawSpikingNeuronSingleInput}[3][1]{
+    \begin{tikzpicture}
+        \drawSpikingNeuronSingleInputInner[#1]{#2}{#3};
+    \end{tikzpicture}
+}
+
+
+
+% relationships
+\newcommand{\drawRelationships}{
+    \begin{tikzpicture}[
+        relation/.style={
+            >=stealth,
+            line width=5pt,
+            rounded corners,
+            color=black!30!white,
+        }
+    ]
+        % draw binary neuron
+        \begin{scope}[local bounding box=binary_scope]
+            \drawBinaryNeuronInner{binary neuron}{0};
+        \end{scope}
+
+
+        \begin{scope}[shift={(3.5,2)}]
+            % draw digital neuron
+            \begin{scope}[local bounding box=digital_scope]
+                \drawDigitalNeuronInner{digital neuron}{0};
+            \end{scope}
+
+            % draw ΣΔ modulator
+            \begin{scope}[shift={(4.5,0)},local bounding box=sigmadelta_scope]
+                \drawSigmaDeltaModulatorInner{first-order $\Sigma\Delta$-modulator}{0};
+            \end{scope}
+        \end{scope}
+
+        \begin{scope}[shift={(3.5,-2)}]
+            % draw continuous LN neuron
+            \begin{scope}[local bounding box=continuous_scope]
+                \drawContinuousNeuronInner{cont. LN neuron}{0};
+            \end{scope}
+
+            % draw lIF neuron
+            \begin{scope}[shift={(4.5,0)},local bounding box=spiking_scope]
+                \drawSpikingNeuronInner{spiking lIF neuron}{0};
+            \end{scope}
+        \end{scope}
+
+        % connect neurons
+        \draw[->,relation] (binary_scope.north) |- node[above=3mm, pos=0.75, align=center]{\textbf{discrete}\\multi-level} (digital_scope.west);
+        \draw[->,relation] let \p1=(digital_scope.east), \p2=(sigmadelta_scope.west) in
+            (\x1,\y1) -- node[above=3mm, pos=0.5, align=center]{\textbf{pdm}\\(clocked)} (\x2,\y1);
+        \draw[->,relation] (binary_scope.south) |- node[below=3mm, pos=0.75, align=center]{\textbf{continuous}\\multi-level} (continuous_scope.west);
+        \draw[->,relation] let \p1=(continuous_scope.east), \p2=(spiking_scope.west) in
+            (\x1,\y1) -- node[below=3mm, pos=0.5, align=center]{\textbf{spiking}\\(async.)} (\x2,\y1);
+    
+    \end{tikzpicture}
+}
+
+
+
+
+
+
+% draw adaptive neuron
+\makeatletter
+\newcommand{\drawPlasticNeuronInner}[3][\@nil]{
+    \def\optarg{#1}
+    \def\drawarrow{#3}
+    %draw first neuron
+    \node[operation]  (sum) at (0,0) {+};
+    \node[weight, label={below:{$w_{1}$}}] (weight1) at ($(sum)+(-1,1.1)$) {$\times$};
+    \node[weight, label={below:{$w_{2}$}}]  (weight2) at ($(sum)+(-1,0)$) {$\times$};
+    \node[] (dots) at ($(sum)+(-1,-1.1)$) {\vdots};
+    \draw node[block, label=above:{$x(t)$}] (filter) at ($(sum)+(1,0)$) {$\frac{\alpha}{s+\alpha}$};
+    \draw node[block, linear=12pt] (suffstat1) at ($(filter)+(1,-1)$) {};
+    \draw node[block, quadratic=12pt] (suffstat2) at ($(filter)+(1,-2)$) {};
+    \draw node[block,label={above:{$\chi_1$}}] (suffstatfilt1) at ($(suffstat1)+(1,0)$) {$\frac{\beta}{s+\beta}$};
+    \draw node[block,label={below:{$\chi_2$}}] (suffstatfilt2) at ($(suffstat2)+(1,0)$) {$\frac{\beta}{s+\beta}$};
+    \draw node[block, exponential=12pt] (nonlinearity) at ($(filter)+(3,0)$) {};
+    \coordinate (transmitter) at ($(nonlinearity)+(4em,0)$) ;
+
+    % draw signals
+    \ifnum\numexpr#3\relax=1{
+        \draw[<-,decorate,continuous] (weight1) -- node[below=0.2]  (input1) {$s_1(t)$} ++(-4em,0);
+        \draw[<-,decorate,continuous] (weight2) -- node[below=0.2]  (input2) {$s_2(t)$} ++(-4em,0);
+    } \fi;
+    
+    \draw [->] (weight1) -| (sum);
+    \draw [->] (weight2) -- (sum);
+    \draw [] (sum) -- (filter) -- (nonlinearity);
+    \draw [->] (filter) |-  (suffstat1); 
+    \draw [->,>=|] (suffstat1) -- (suffstatfilt1) -| ($(nonlinearity.south west)+(5pt,-3pt)$);
+    \draw [->] (filter) |-  (suffstat2);
+    \draw [->,>=|] (suffstat2) -- (suffstatfilt2) -| ($(nonlinearity.south east)+(-5pt,-3pt)$);
+    
+    % draw background
+    \begin{scope}[on background layer]
+        \path [highlight=highlightColor_continuous] let \p1=(weight1.north west), \p2=(suffstatfilt2.south west), \p3=(nonlinearity.east) in 
+        ($(\x1,\y1) + (-0.1,0.1)$) -- node[above]{#2} ($(\x3,\y1) + (0.1,0.1)$) -- ($(\x3,\y2)+(0.1,-0.5)$) -- ($(\x1,\y2)+(-0.1,-0.5)$) -- cycle;
+    \end{scope}
+    
+    
+    \ifnum\numexpr#3\relax=1{
+        \draw[->,decorate,continuous] (nonlinearity) -- node[below=0.2]  (input2) {$y(t)$} (transmitter);
+    } \else \ifnum\numexpr#3\relax>1 {            %draw second neuron
+        \path (transmitter) ++(1.5,+1) node[weight, hidden, label={below:{$w_{3}$}}] (weight3) {$\times$}
+        ++(0,-1) node[weight, label={below:{$w_{4}$}}]  (weight4) {$\times$}
+        ++(0,-1) node[]  (dots2) {\vdots};
+        \node[operation, hidden, right=of weight4, label={below:$z(t)$}]  (sum2) {+};
+        \node[right=of sum2] {...};
+
+        % draw background
+        \begin{scope}[on background layer]
+                \path [highlight=highlightColor_continuous, right color=white] let \p1=(weight3.north west), \p2=(dots2.south west), \p3=(weight3.west), \p4=(sum2.east) in 
+            ($(\x3,\y1) + (-0.1,0.1)$) -- node[above]{#1} ($(\x4,\y1) + (0.2,0.1)$) -- ($(\x4,\y2)+(0.2,-0.1)$) -- ($(\x3,\y2)+(-0.1,-0.1)$) -- cycle;
+        \end{scope}
+
+        \draw[->,decorate,continuous] (nonlinearity) -- node[below=0.2]  (input2) {$y(t)$} (weight4);
+        \draw [->, hidden] (weight3) -| (sum2);
+        \draw (weight4) -- (sum2);
+    } \fi \fi;
+}
+\makeatother
+\newcommand{\drawPlasticNeuron}[3][1]{
+    \begin{tikzpicture}
+        \drawPlasticNeuronInner[#1]{#2}{#3};
+    \end{tikzpicture}
+}
+
+
+% draw filter neuron
+\makeatletter
+\newcommand{\drawFilterNeuronInner}[5][\@nil]{
+    \def\optarg{#1}
+    \def\drawarrow{#3}
+    \def\taps{#4}
+    %draw first neuron
+
+    \coordinate (origin) at (0,0);
+    \draw node[block, relu=12pt] (nonlinearity) at ($(origin)+(2,0)$) {};
+    \coordinate (transmitter) at ($(nonlinearity)+(4em,0)$);
+    
+    \def\offset{(origin)}
+    \def\nextnode{(nonlinearity)}
+    \def\numtaps{0}
+    \foreach \tap[count=\i] in \taps{
+        \node[operation]  (sum-\i) at \offset {+};
+        \node[block, label=below:{$x_\i(t)$}]  (filter-\i) at ($(sum-\i)+(1,0)$) {\tap};
+        
+        \ifnum\i>1
+            \fill (sum-\i.center)++(-0.25,1.5) circle[radius=1pt];
+            \fill (sum-\i.center)++(0.25,1) circle[radius=1pt];
+        \fi
+
+        \draw[->] (sum-\i.center)++(-0.25,1.5) -- node[left]{$w_{\i,1}$} ++(0,-0.4cm) arc(90:270:1mm) -- ($(sum-\i.center)+(-0.25,0.5)$) -- (sum-\i);
+        \draw[->] (sum-\i.center)++(0.25,1) -- ++(0,-0.1cm) -- node[right]{$w_{\i,2}$} ($(sum-\i.center)+( 0.25,0.5)$) -- (sum-\i);
+        \draw (sum-\i) -- (filter-\i);
+        \draw[->] (filter-\i) -- \nextnode;
+        
+        \xdef\offset{($(sum-\i)-(2,0)$)}
+        \xdef\nextnode{(sum-\i)}
+        \xdef\numtaps{\i}
+    }
+    \path \nextnode + (-1,0) node(tapdots) {$\cdots$};
+    
+    \path (tapdots) ++(-0.5,1) coordinate(pin-2) ++(0,0.5) coordinate(pin-1);
+    \draw (pin-1) -- (-0.25,1.5);
+    \draw (pin-2) -- ( 0.25,1.0);
+    
+    
+    % draw signals
+    \ifnum\numexpr#3\relax=1{
+        \draw[<-,decorate,continuous] (pin-1) -- node[above]  (input1) {$s_1(t)$} ++(-4em,0);
+        \draw[<-,decorate,continuous] (pin-2) -- node[below]  (input2) {$s_2(t)$} ++(-4em,0);
+        \node[rotate=90] (inputdots) at ($(input2) + (0,-0.5)$) {$\dots$};
+    } \fi;
+    
+    \ifnum\numexpr#5\relax=0{
+        \coordinate (lower_right) at ($(nonlinearity.east)+(0,-1)$);
+    } \else {
+        \coordinate (lower_right) at ($(nonlinearity.east)+(0.1,-1.25)$);
+        \draw[->,decorate,continuous] (nonlinearity) -- node[below=0.2]  (input2) {$y(t)$} (transmitter);
+        
+        \foreach \tap[count=\i] in \taps {
+            \draw[->] (sum-\i.center)++(0,-1) -- node[left]{$v_\i$} (sum-\i);
+            \ifnum\i<\numtaps
+                \fill (sum-\i.center)++(0,-1) circle[radius=1pt];
+            \fi
+        };
+        
+        \ifnum\numexpr#5\relax=1 {
+            \draw (nonlinearity.east)++(0.1,0) |- ($(sum-\numtaps)+(0,-1)$);
+        } \else {
+            \draw (filter-1.east)++(0.1,0) |- ($(sum-\numtaps)+(0,-1)$);
+        }\fi;
+     } \fi ;
+    
+    \coordinate (upper_left) at ($(pin-1)+(0,0.2)$);
+    % draw background
+    \begin{scope}[on background layer]
+        \path [highlight=highlightColor_filter] let \p1=(upper_left), \p2=(lower_right) in 
+        ($(\x1,\y1) + (-0.1,0.1)$) -- node[above]{#2} ($(\x2,\y1) + (0.1,0.1)$) -- ($(\x2,\y2)+(0.1,-0.1)$) -- ($(\x1,\y2)+(-0.1,-0.1)$) -- cycle;
+    \end{scope}
+    
+    
+    \ifnum\numexpr#3\relax=1{
+        \draw[->,decorate,continuous] (nonlinearity) -- node[below=0.2]  (input2) {$y(t)$} (transmitter);
+    } \fi;
+
+}
+\makeatother
+\newcommand{\drawFilterNeuron}[5][1]{
+    \begin{tikzpicture}
+        \drawFilterNeuronInner[#1]{#2}{#3}{#4}{#5};
+    \end{tikzpicture}
+}
+
+
+% draw multi-filter neuron
+\makeatletter
+\newcommand{\drawMultiFilterNeuronInner}[5][\@nil]{
+    \def\optarg{#1}
+    \def\drawarrow{#3}
+    \def\taps{#4}
+    %draw first neuron
+
+    \coordinate (origin) at (0,0);
+    \draw node[block, relu=12pt] (nonlinearity) at ($(origin)+(2,0)$) {};
+    \node[operation]  (sum) at ($(nonlinearity)+(-1,0)$) {+};
+    \coordinate (transmitter) at ($(nonlinearity)+(4em,0)$);
+
+    \draw[->] (sum) -- (nonlinearity);
+   
+    \def\offset{($(sum)+(-1,0)$)}
+    \def\nextnode{(nonlinearity)}
+    \def\numtaps{0}
+    \foreach \tap[count=\i] in \taps{
+        \node[block, label=below:{$x_\i(t)$}, anchor=east]  (filter-\i) at \offset {\tap};
+        \coordinate  (pin-\i) at ($(filter-\i)+(-1,0)$);
+
+        % draw signals
+        \ifnum\numexpr#3\relax=1{
+            \draw[decorate,continuous] (pin-\i) -- node[below]  (input1) {$s_\i(t)$} ++(-4em,0);
+        } \fi;
+
+        \draw[->] (pin-\i) -- (filter-\i);
+        \draw[->] (filter-\i.east) -- ++(0.25,0) -- (sum);
+        
+        \xdef\offset{($\offset+(0,-1.25)$)}
+        \xdef\numtaps{\i}
+    };
+
+    \node (fdots) at ($(filter-\numtaps)+(0,-1.25)$) {\vdots};
+    \ifnum\numexpr#3\relax=1{
+        \node (idots) at ($(filter-\numtaps.east)+(-1,-1.25)+(-4em,0)$) {\vdots};
+    } \fi;
+
+    \coordinate (upper_left) at ($(pin-1)+(0,0.5)$);
+    \coordinate (right) at (nonlinearity.east);
+    \coordinate (lower) at ($(fdots)+(0,-0.5)$);
+
+    % draw background
+    \begin{scope}[on background layer]
+        \path [highlight=highlightColor_filter] let \p1=(upper_left), \p2=(right), \p3=(lower) in 
+        ($(\x1,\y1) + (-0.1,0.1)$) -- node[above]{#2} ($(\x2,\y1) + (0.1,0.1)$) -- ($(\x2,\y3)+(0.1,-0.1)$) -- ($(\x1,\y3)+(-0.1,-0.1)$) -- cycle;
+    \end{scope}
+    
+    
+    \ifnum\numexpr#3\relax=1{
+        \draw[->,decorate,continuous] (nonlinearity) -- node[below=0.2]  (input2) {$y(t)$} (transmitter);
+    } \fi;
+
+}
+\makeatother
+\newcommand{\drawMultiFilterNeuron}[5][1]{
+    \begin{tikzpicture}
+        \drawMultiFilterNeuronInner[#1]{#2}{#3}{#4}{#5};
+    \end{tikzpicture}
+}
+
+\newcommand{\drawBallStickNeuronInner}[2]{
+    \coordinate (origin) at (0,0);
+    \coordinate (soma) at ($(origin)+(2,0)$);
+    \coordinate (transmitter) at ($(soma)+(4em,0)$);
+    
+    \def\numtaps{#1}
+    \foreach \i in {1,...,\numtaps}{
+        \coordinate (sum-\i) at ($(soma)+(-\i*2,0)$);
+        
+        \ifnum\i>1
+            \fill (sum-\i.center)++(-0.25,1.5) circle[radius=1pt];
+            \fill (sum-\i.center)++(0.25,1) circle[radius=1pt];
+        \fi
+
+        \draw[->] (sum-\i.center)++(-0.25,1.5) -- node[left]{$w_{\i,1}$} ++(0,-0.4cm) arc(90:270:1mm) -- ($(sum-\i.center)+(-0.25,0.25)$);
+        \draw[->] (sum-\i.center)++(0.25,1) -- ++(0,-0.1cm) -- node[right]{$w_{\i,2}$} ($(sum-\i.center)+( 0.25,0.25)$);
+    }
+    
+    \path (sum-\numtaps) ++(-1.5,1) coordinate(pin-2) ++(0,0.5) coordinate(pin-1);
+    \draw (pin-1) -- (-0.25,1.5);
+    \draw (pin-2) -- ( 0.25,1.0);
+    
+    % draw ball-stick
+    \draw (soma)++(-0.5*0.707106781,0)++(225:0.5*0.707106781) arc (225:495:0.5*0.707106781) -- ++(-\numtaps*2,0) |- cycle;
+    
+    % % draw signals
+    \draw[<-,decorate,continuous] (pin-1) -- node[above]  (input1) {$s_1(t)$} ++(-4em,0);
+    \draw[<-,decorate,continuous] (pin-2) -- node[below]  (input2) {$s_2(t)$} ++(-4em,0);
+    \node[rotate=90] (inputdots) at ($(input2) + (0,-0.5)$) {$\dots$};
+    \draw[->,decorate,continuous] (soma) -- node[below=0.2]  (input2) {$y(t)$} (transmitter);
+    
+    \coordinate (lower_right) at ($(soma.east)+(0.1,-0.5)$);
+    \coordinate (upper_left) at ($(pin-1)+(0,0.2)$);
+    % draw background
+    \begin{scope}[on background layer]
+        \path [highlight=highlightColor_filter] let \p1=(upper_left), \p2=(lower_right) in 
+        ($(\x1,\y1) + (-0.1,0.1)$) -- node[above]{#2} ($(\x2,\y1) + (0.1,0.1)$) -- ($(\x2,\y2)+(0.1,-0.1)$) -- ($(\x1,\y2)+(-0.1,-0.1)$) -- cycle;
+    \end{scope}
+
+}
+\newcommand{\drawBallStickNeuron}[2]{
+    \begin{tikzpicture}
+        \drawBallStickNeuronInner{#1}{#2};
+    \end{tikzpicture}
+}

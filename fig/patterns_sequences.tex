@@ -1,0 +1,103 @@
+\usetikzlibrary{patterns}
+\def\spikebot{-1}
+\def\spiketopA{-0.5}
+\def\spiketopB{-1.5}
+\def\spiketopC{-3}
+
+%a/b = mean1 = 1 -> a/b² = variance = 1/4
+% mean2 = 3 = a/b, variance = a/b² = 1/4 => b = mean2/variance = 12 -> a=mean2*b = 36
+
+\begin{tikzpicture}[
+    spike/.style={ultra thick, color=black},
+    pdf/.style={opacity=0.5},
+    highlight/.style={rounded corners, opacity=0.25},
+]
+    \begin{groupplot}[
+        group style= { 
+            group size = 3 by 2,
+            horizontal sep=0.05\textwidth,
+        },
+        axis x line=left,
+        axis y line=right,
+        xmin=-5,
+        xmax=0,
+        ymin=0,
+        ymax=1,
+        ytick=\empty,
+        xtick={-3,-1,0},
+        xticklabels={$t_0-3$, $t_0-1$, $t_0$, },
+        width=0.3\textwidth,
+        height=1cm,
+        scale only axis,
+    ]
+    \nextgroupplot[ylabel=$s_1(t)$, title=fixed spike pattern]
+        \addplot[domain=-5:0,samples=201, pdf, fill=Set1-A] expression {0.068594960344208067178251741806808337790256187737786684674*(-x)^35*exp(-12*(-x)};
+        \path (axis cs:\spiketopA,0) coordinate (spiketopleftAbot) -- (axis cs:\spiketopA,1) coordinate (spiketopleftAtop);
+        \path (axis cs:\spiketopB,0) coordinate (spiketopleftBbot) -- (axis cs:\spiketopB,1) coordinate (spiketopleftBtop);
+        \path (axis cs:\spiketopC,0) coordinate (spiketopleftCbot) -- (axis cs:\spiketopC,1) coordinate (spiketopleftCtop);
+    \nextgroupplot[ylabel=$s_1(t)$, title=spike sequence]
+        \fill[pdf, pattern=crosshatch dots, pattern color=Set1-A] (axis cs:0,0) rectangle (axis cs:-4,0.5);
+        \fill[pdf, fill=Set1-A] (axis cs:\spikebot,0) rectangle (axis cs:\spikebot-2,0.5);
+        \path (axis cs:\spiketopA,0) coordinate (spiketopmiddleAbot) -- (axis cs:\spiketopA,1) coordinate (spiketopmiddleAtop);
+        \path (axis cs:\spiketopB,0) coordinate (spiketopmiddleBbot) -- (axis cs:\spiketopB,1) coordinate (spiketopmiddleBtop);
+        \path (axis cs:\spiketopC,0) coordinate (spiketopmiddleCbot) -- (axis cs:\spiketopC,1) coordinate (spiketopmiddleCtop);
+    \nextgroupplot[ylabel=$s_1(t)$, title=spike-volley sequence]
+        \fill[pdf, pattern=crosshatch dots, pattern color=Set1-A] (axis cs:0,0) rectangle (axis cs:-4,0.5);
+        \fill[pdf, fill=Set1-A] (axis cs:\spikebot,0) rectangle (axis cs:\spikebot-2,0.5);
+        \path (axis cs:\spiketopA,0) coordinate (spiketoprightAbot) -- (axis cs:\spiketopA,1) coordinate (spiketoprightAtop);
+        \path (axis cs:\spiketopB,0) coordinate (spiketoprightBbot) -- (axis cs:\spiketopB,1) coordinate (spiketoprightBtop);
+        \path (axis cs:\spiketopC,0) coordinate (spiketoprightCbot) -- (axis cs:\spiketopC,1) coordinate (spiketoprightCtop);
+        \pgfplotsinvokeforeach{0,1,2,3,4,5}{
+            \coordinate (level-top-#1) at (axis cs:0,0.2*#1);
+        };
+    \nextgroupplot[ylabel=$s_2(t)$, xlabel=time]
+        \addplot[domain=-5:0,samples=201, pdf, fill=Set1-B] expression {4^4/3!*(-x)^3*exp(-4*(-x)};
+        \path (axis cs:\spikebot,0) coordinate (spikebotleftbot) -- (axis cs:\spikebot,1) coordinate (spikebotlefttop);
+    \nextgroupplot[ylabel=$s_2(t)$, xlabel=time]
+        \fill[pdf, fill=Set1-B] (axis cs:0,0) |- (axis cs:-2,0.5) |- (axis cs:-5,0);
+        \path (axis cs:\spikebot,0) coordinate (spikebotmiddlebot) -- (axis cs:\spikebot,1) coordinate (spikebotmiddletop);
+    \nextgroupplot[ylabel=$s_2(t)$, xlabel=time]
+        \fill[pdf, fill=Set1-B] (axis cs:0,0) |- (axis cs:-2,0.5) |- (axis cs:-5,0);
+        \path (axis cs:\spikebot,0) coordinate (spikebotrightbot) -- (axis cs:\spikebot,1) coordinate (spikebotrighttop);
+        \pgfplotsinvokeforeach{0,1,2,3,4,5}{
+            \coordinate (level-bot-#1) at (axis cs:0,0.2*#1);
+        };
+    \end{groupplot},
+    \fill[highlight,fill=black!50] (spiketopleftAtop)++(-2mm,2mm) -| ($(spiketopleftAbot)+(2mm,-2mm)$) -- ($(spikebotleftbot)+(2mm,-2mm)$) -| ($(spikebotlefttop)+(-2mm,+2mm)$) -- cycle;
+    \fill[highlight,fill=black!50] (spiketopleftBbot)++(-2mm,-2mm) |- ($(spiketopleftBtop)+(2mm,2mm)$) -- ($(spikebotlefttop)+(2mm, 2mm)$) |- ($(spikebotleftbot)+(-2mm,-2mm)$) -- cycle;
+    \fill[highlight,fill=Set1-C] (spiketopleftCbot)++(-2mm,-2mm) |- ($(spiketopleftCtop)+(2mm,2mm)$) -- ($(spikebotlefttop)+(2mm, 2mm)$) |- ($(spikebotleftbot)+(-2mm,-2mm)$) -- cycle;
+    \draw[->, spike] (spiketopleftAbot) -- node[left,circle]{(c)} (spiketopleftAtop);
+    \draw[->, spike] (spiketopleftBbot) -- node[left,circle]{(b)} (spiketopleftBtop);
+    \draw[->, spike] (spiketopleftCbot) -- node[left,circle]{(a)} (spiketopleftCtop);
+    \draw[->, spike] (spikebotleftbot) -- node[left,circle]{(d)} (spikebotlefttop);
+
+    \fill[highlight,fill=black!50] (spiketopmiddleAtop)++(-2mm,2mm) -| ($(spiketopmiddleAbot)+(2mm,-2mm)$) -- ($(spikebotmiddlebot)+(2mm,-2mm)$) -| ($(spikebotmiddletop)+(-2mm,+2mm)$) -- cycle;
+    \fill[highlight,fill=Set1-C] (spiketopmiddleBbot)++(-2mm,-2mm) |- ($(spiketopmiddleBtop)+(2mm,2mm)$) -- ($(spikebotmiddletop)+(2mm, 2mm)$) |- ($(spikebotmiddlebot)+(-2mm,-2mm)$) -- cycle;
+    \fill[highlight,fill=Set1-C] (spiketopmiddleCbot)++(-2mm,-2mm) |- ($(spiketopmiddleCtop)+(2mm,2mm)$) -- ($(spikebotmiddletop)+(2mm, 2mm)$) |- ($(spikebotmiddlebot)+(-2mm,-2mm)$) -- cycle;
+    \draw[->, spike] (spiketopmiddleAbot) -- node[left,circle]{(c)} (spiketopmiddleAtop);
+    \draw[->, spike] (spiketopmiddleBbot) -- node[left,circle]{(b)} (spiketopmiddleBtop);
+    \draw[->, spike] (spiketopmiddleCbot) -- node[left,circle]{(a)} (spiketopmiddleCtop);
+    \draw[->, spike] (spikebotmiddlebot) -- node[left,circle]{(d)} (spikebotmiddletop);
+
+
+    \fill[highlight,fill=black!50] (spiketoprightAtop)++(-2mm,2mm) -| ($(spiketoprightAbot)+(2mm,-2mm)$) -- ($(spikebotrightbot)+(2mm,-2mm)$) -| ($(spikebotrighttop)+(-2mm,+2mm)$) -- cycle;
+    \fill[highlight,fill=Set1-C] (spiketoprightBbot)++(-2mm,-2mm) |- ($(spiketoprightBtop)+(2mm,2mm)$) -- ($(spikebotrighttop)+(2mm, 2mm)$) |- ($(spikebotrightbot)+(-2mm,-2mm)$) -- cycle;
+    \fill[highlight,fill=Set1-C] (spiketoprightCbot)++(-2mm,-2mm) |- ($(spiketoprightCtop)+(2mm,2mm)$) -- ($(spikebotrighttop)+(2mm, 2mm)$) |- ($(spikebotrightbot)+(-2mm,-2mm)$) -- cycle;
+    \path (spiketoprightAbot) -- node[left,circle]{(c)} (spiketoprightAtop);
+    \path (spiketoprightBbot) -- node[left,circle]{(b)} (spiketoprightBtop);
+    \path (spiketoprightCbot) -- node[left,circle]{(a)} (spiketoprightCtop);
+    \path (spikebotrightbot) -- node[left,circle]{(d)} (spikebotrighttop);
+
+    \foreach \spike in {(spiketoprightAbot), (spiketoprightBbot), (spiketoprightCbot)}{
+        \foreach \levellow[count=\levelhigh] in {0,...,4}{
+            \fill let \p1=\spike, \p2=(level-top-\levellow), \p3=(level-top-\levelhigh) in {
+                (\x1-0.45mm+rand*1mm,\y2+0.05mm) rectangle ++(0.9mm,\y3-\y2)
+            } ;
+        }
+    };
+    \foreach \levellow[count=\levelhigh] in {0,...,4}{
+        \fill let \p1=(spikebotrightbot), \p2=(level-bot-\levellow), \p3=(level-bot-\levelhigh) in {
+            (\x1-0.45mm+rand*1mm,\y2+0.05mm) rectangle ++(0.9mm,\y3-\y2)
+        } ;
+    }
+\end{tikzpicture}

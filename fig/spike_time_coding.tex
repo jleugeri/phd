@@ -1,0 +1,81 @@
+
+\def\spiketimeA{288}%{0.8*360} %1.6π
+\def\spiketimeB{180}%{0.5*360} %π
+\def\spiketimeC{396}%{1.1*360} %0.2π
+
+\usetikzlibrary{calc}
+\begin{tikzpicture}[
+    >=stealth,
+    reference/.style={ultra thick, color=black!30},
+    spike/.style={ultra thick, color=black},
+    phase/.style={color=Set1-B},
+    isi/.style={color=Set1-A},
+]
+\begin{groupplot}[
+    group style={
+        group size=1 by 2,
+        vertical sep=2cm,
+    },
+    ymin=0, 
+    ymax=1.3, 
+    xmin=-40,
+    xmax=405,
+    width=\textwidth,
+    height=1.0cm,
+    scale only axis,
+    axis y line=none,
+    axis x line=bottom,
+    xtick=\empty,
+    axis background/.style={fill=none}
+]
+\nextgroupplot[title=phase-coding]
+    \addplot[domain=-45:0, samples=100, dashed, reference] {cos(x)/2+0.6};
+    \addplot[domain=0:360, samples=250, reference] {cos(x)/2+0.6};
+    \addplot[domain=360:405, samples=100, dashed, reference, color=black!30] {cos(x)/2+0.6};
+    \addplot[domain=0:360, samples=250, phase, ultra thick] {exp(-x/120)};
+    \addplot[domain=360:405, samples=100, phase, ultra thick] {exp(-(x-360)/120)};
+    \draw[-, reference] (axis cs:0,0) coordinate (arrow1bot) -- (axis cs:0,1.3) coordinate (arrow1top);
+    \draw[-, reference, dashed] (axis cs:360,0) coordinate (arrow2bot) -- (axis cs:360,1.3) coordinate (arrow2top);
+    \draw[->, spike] (axis cs:\spiketimeA,0) coordinate (spike1bot) -- (axis cs:\spiketimeA,1.3) coordinate (spike1top);
+    \draw[->, spike] (axis cs:\spiketimeB,0) coordinate (spike2bot) -- (axis cs:\spiketimeB,1.3) coordinate (spike2top);
+    \draw[->, spike] (axis cs:\spiketimeC,0) coordinate (spike3bot) -- (axis cs:\spiketimeC,1.3) coordinate (spike3top);
+    \addplot[only marks, mark=*, domain=0:360, samples at={\spiketimeB,\spiketimeA}, phase] {exp(-x/120)};
+    \addplot[only marks, mark=*, domain=360:405, samples at={\spiketimeC}, phase] {exp(-(x-360)/120)};
+\nextgroupplot[title=inter-spike-interval coding]
+    \addplot[domain=-40:0, samples=100, phase, ultra thick, black!30, dashed] {exp(-(x+80)/80)};
+    \addplot[domain=0:\spiketimeB, samples=200, phase, ultra thick, isi, dashed] {exp(-(x+80)/80)};
+    \addplot[domain=\spiketimeB:\spiketimeA, samples=100, phase, ultra thick, isi] {exp(-(x-\spiketimeB)/80)};
+    \addplot[domain=\spiketimeA:\spiketimeC, samples=100, phase, ultra thick, isi] {exp(-(x-\spiketimeA)/80)};
+    \addplot[domain=\spiketimeC:405, samples=100, phase, ultra thick, isi] {exp(-(x-\spiketimeC)/80)};
+    \draw[->, spike] (axis cs:\spiketimeA,0) -- (axis cs:\spiketimeA,1.3) coordinate (spikebot1top);
+    \draw[->, spike] (axis cs:\spiketimeB,0) -- (axis cs:\spiketimeB,1.3) coordinate (spikebot2top);
+    \draw[->, spike] (axis cs:\spiketimeC,0) -- (axis cs:\spiketimeC,1.3) coordinate (spikebot3top);
+    \addplot[only marks, mark=*, domain=0:405, samples at={\spiketimeB}, isi] {exp(-(x+80)/80)};
+    \addplot[only marks, mark=*, domain=0:405, samples at={\spiketimeA}, isi] {exp(-(x-\spiketimeB)/80)};
+    \addplot[only marks, mark=*, domain=0:405, samples at={\spiketimeC}, isi] {exp(-(x-\spiketimeA)/80)};
+    \coordinate (midwest) at (axis cs:-40,0);
+    \coordinate (origin) at (axis cs:0,0);
+\end{groupplot}
+\node[label={[reference]above:{$\phi=0$}}] at (arrow1top) {};
+\node[label={[reference]above:{$\phi=0$}}] at (arrow2top) {};
+\path let \p1 = (midwest), \p2 = (origin), \p3 = (spikebot2top), \p4 = (spikebot1top), \p5 = (spikebot3top) in {
+    (\x1,\y1-3mm)  coordinate (n1) -- (\x2,\y1-3mm) coordinate (n2)  -- (\x3,\y1-3mm) coordinate (n3) -- (\x4,\y1-3mm) coordinate (n4) -- (\x5,\y1-3mm) coordinate (n5)
+};
+
+\draw[isi, dashed] (n1) -- (n2);
+\draw[isi, ->] (n2) -- node[midway,below=1mm] {$\phi_1\approx~?$} (n3);
+\draw[isi, <->] (n3) -- node[midway,below=1mm] {$\phi_2\approx 0.6\pi$} (n4);
+\draw[isi, <->] (n4) -- node[midway,below=1mm] {$\phi_3\approx 0.6\pi$} (n5);
+\draw[isi] (n3)+(0,-1mm) -- ++(0,3mm);
+\draw[isi] (n4)+(0,-1mm) -- ++(0,3mm);
+\draw[isi] (n5)+(0,-1mm) -- ++(0,3mm);
+
+\draw[phase] (arrow1bot) -- ($(arrow1bot)+(0,-5mm)$);
+\draw[phase] (arrow2bot) -- ($(arrow2bot)+(0,-3mm)$);
+\draw[phase] (spike1bot) -- ($(spike1bot)+(0,-3mm)$);
+\draw[phase] (spike2bot) -- ($(spike2bot)+(0,-5mm)$);
+\draw[phase] (spike3bot) -- ($(spike3bot)+(0,-3mm)$);
+\draw[<->, phase] ($(arrow1bot)+(0,-2mm)$) -- node[pos=1, below=3mm, anchor=north east] {$\phi_2\approx 1.6\pi$} ($(spike1bot)+(0,-2mm)$);
+\draw[<->, phase] ($(arrow2bot)+(0,-2mm)$) -- node[below=3mm] {$\phi_3\approx 0.2\pi$} ($(spike3bot)+(0,-2mm)$);
+\draw[<->, phase] ($(arrow1bot)+(0,-4mm)$) -- node[below=1mm] {$\phi_1\approx \pi$} ($(spike2bot)+(0,-4mm)$);
+\end{tikzpicture}

@@ -1,0 +1,21 @@
+name = "thesis"
+uuid = "53e62c35-64b0-4882-ae18-df8c6450aa75"
+authors = ["jleugeri <johannes@leugering.science>"]
+version = "0.1.0"
+
+[deps]
+ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
+Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
+DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
+Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
+IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+PGFPlots = "3b7a836e-365b-5785-a47d-02c71176b4aa"
+PGFPlotsX = "8314cec4-20b6-5062-9cdb-752b83310925"
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+TikzPictures = "37f6aa50-8035-52d0-81c2-5a1d08754b2d"
+Weave = "44d3d7a6-8a23-5bf8-98c5-b353f8df5ec9"

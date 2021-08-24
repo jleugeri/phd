@@ -1,0 +1,93 @@
+\def\spiketime{6.5/16}
+\begin{tikzpicture}[
+    >=stealth,
+    reference/.style={ultra thick, color=black!30},
+    spike/.style={ultra thick, color=black},
+    active/.style={fill=Set1-A!50},
+    ]
+    \begin{groupplot}[
+        group style={group size=1 by 8, vertical sep=2mm}, 
+        height=0.5cm, 
+        width=0.8*10cm, 
+        scale only axis,
+        ymin=0, 
+        ymax=1, 
+        xmin=0,
+        xmax=1,
+        xtick distance=4/16,
+        minor x tick num=3,
+        ytick=\empty,
+        xticklabel=\empty,
+        clip=false,
+        axis background/.style={fill=none},
+        ]
+    \nextgroupplot[title=relative spike-timing,
+    height=1cm,
+    axis y line=none,
+    axis x line=bottom,
+    ]
+        \draw[->, reference] (axis cs:0,0) coordinate (arrow1bot) -- (axis cs:0,1) coordinate (arrow1top);
+        \draw[->, spike] (axis cs:\spiketime,0) coordinate (spike1bot) -- (axis cs:\spiketime,1) coordinate (spike1top);
+        \draw[<->] (axis cs:0,0.5) -- node[above, rectangle] {$\phi = \nicefrac{6.5}{16}$} (axis cs:\spiketime,0.5);
+    \nextgroupplot[title=digital one-hot encodings,
+    yshift=-1cm, ]
+        \filldraw[active] (axis cs:0,0) -| (axis cs:0/16,1) -| (axis cs:0/16+1/16,0) -- (axis cs:1,0) -- cycle;
+        \pgfplotsinvokeforeach{0,1,...,15}{
+            \ifthenelse{#1 = 0}
+            {\node at (axis cs:#1/16+0.5/16, 0.5) {1};}
+            {\node at (axis cs:#1/16+0.5/16, 0.5) {0};};
+        };
+        \coordinate (anchor0) at (axis cs:0,0.5);
+    \nextgroupplot[]
+        \draw[active] (axis cs:0,0) -| (axis cs:1/16,1) -| (axis cs:1/16+1/16,0) -- (axis cs:1,0) -- cycle;
+        \pgfplotsinvokeforeach{0,1,...,15}{
+            \ifthenelse{#1 = 1}
+            {\node at (axis cs:#1/16+0.5/16, 0.5) {1};}
+            {\node at (axis cs:#1/16+0.5/16, 0.5) {0};};
+        };
+        \coordinate (start1) at (axis cs:1.5/16,0);
+        \coordinate (anchor1) at (axis cs:0,0.5);
+    \nextgroupplot[group/empty plot]
+    \nextgroupplot[]
+        \draw[active] (axis cs:0,0) -| (axis cs:6/16,1) -| (axis cs:6/16+1/16,0) -- (axis cs:1,0) -- cycle;
+        \pgfplotsinvokeforeach{0,1,...,15}{
+            \ifthenelse{#1 = 6}
+            {\node at (axis cs:#1/16+0.5/16, 0.5) {1};}
+            {\node at (axis cs:#1/16+0.5/16, 0.5) {0};};
+        };
+        \coordinate (end1) at (axis cs:6.5/16,1); 
+        \coordinate (start2) at (axis cs:6.5/16,0);
+        \coordinate (anchor6) at (axis cs:0,0.5);
+    \nextgroupplot[group/empty plot]
+    \nextgroupplot[]
+        \draw[active] (axis cs:0,0) -| (axis cs:14/16,1) -| (axis cs:14/16+1/16,0) -- (axis cs:1,0) -- cycle;
+        \pgfplotsinvokeforeach{0,1,...,15}{
+            \ifthenelse{#1 = 14}
+            {\node at (axis cs:#1/16+0.5/16, 0.5) {1};}
+            {\node at (axis cs:#1/16+0.5/16, 0.5) {0};};
+        };
+        \coordinate (end2) at (axis cs:14.5/16,1);
+        \coordinate (anchor14) at (axis cs:0,0.5);
+    \nextgroupplot[
+        xticklabel={},
+        xlabel=time]
+        \draw[active] (axis cs:0,0) -| (axis cs:15/16,1) -| (axis cs:15/16+1/16,0) -- (axis cs:1,0) -- cycle;
+        \pgfplotsinvokeforeach{0,1,...,15}{
+            \ifthenelse{#1 = 15}
+            {\node at (axis cs:#1/16+0.5/16, 0.5) {1};}
+            {\node at (axis cs:#1/16+0.5/16, 0.5) {0};};
+        };
+        \coordinate (anchor15) at (axis cs:0,0.5);
+    \end{groupplot}
+    \path (start1) -- node[midway,sloped] {\huge \dots} (end1);
+    \path (start2) -- node[midway,sloped] {\huge \dots} (end2);
+    \node[anchor=east] at (anchor0) {0000:};
+    \node[anchor=east] at (anchor1) {0001:};
+    \node[anchor=east] (label) at (anchor6) {0110:};
+    \node[anchor=east] at (anchor14) {1110:};
+    \node[anchor=east] at (anchor15) {1111:};
+    \begin{scope}[on background layer]
+        \coordinate (r) at ($(anchor6)+(8cm,0)$);
+        \fill[rounded corners, Set1-B!50] ($(label.west)+(-2pt,-4mm)$) rectangle ($(anchor6.east)+(8cm+4pt,4mm)$);
+    \end{scope}
+\end{tikzpicture}
